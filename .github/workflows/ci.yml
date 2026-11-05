@@ -20,18 +20,19 @@ jobs:
         run: cargo test --manifest-path contracts/spend_guard/Cargo.toml -- --nocapture
 
   node:
-    name: node workspace check
+    name: x402 + agents unit tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-      - name: Trivial node check
-        run: node -e "console.log('node workspace ok')"
-      - name: Package stubs present
-        run: |
-          test -f x402/package.json
-          test -f agents/package.json
-          test -f intents/package.json
-          test -f dashboard/package.json
+          node-version: "22"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Install workspace
+        run: pnpm install
+      - name: x402 tests
+        run: pnpm --filter @astra-near/x402 test
+      - name: agents tests
+        run: pnpm --filter @astra-near/agents test

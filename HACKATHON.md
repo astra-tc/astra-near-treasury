@@ -15,8 +15,8 @@ Build window: **1–14 Nov 2026**. Submit by 14 Nov 23:59 UTC.
 - [x] README first lines = what / why / how to run
 - [x] docs/ARCHITECTURE.md + docs/THREAT_MODEL.md sketches
 - [ ] near-workspaces sandbox integration tests
-- [ ] x402 paywall (402 → pay → verify → serve)
-- [ ] agents/ceo router + ledger → spend_guard
+- [x] x402 paywall (402 → pay → verify → serve) — offline mock RPC
+- [x] agents/ceo router + ledger → spend_guard — mock decisions (within / over cap)
 - [ ] intents/ dry-quote client (`dry:true`)
 - [ ] `pnpm demo` one-command sandbox loop
 - [ ] dashboard reading event log + README screenshot
@@ -26,7 +26,7 @@ Build window: **1–14 Nov 2026**. Submit by 14 Nov 23:59 UTC.
 
 ## Identity / safety
 - [ ] `git log` authors = Astra Trading Company only
-- [ ] [ ] No personal/Board-member identity strings in repo or git authors
+- [ ] No personal/Board-member identity strings in repo or git authors
 - [ ] No secrets in repo
 - [ ] No mainnet signing from this project
 - [ ] Prize address documented only
