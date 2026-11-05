@@ -1,0 +1,16 @@
+{
+  "name": "astra-near-treasury",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Astra Treasury — agent-run company with a hard-capped NEAR spend-guard",
+  "scripts": {
+    "test:node": "node -e \"console.log('node workspace ok')\"",
+    "test:rust": "cargo test --manifest-path contracts/spend_guard/Cargo.toml",
+    "test": "pnpm test:node && pnpm test:rust",
+    "demo": "echo 'Demo loop lands in a later commit (sandbox spend_guard + x402)'"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

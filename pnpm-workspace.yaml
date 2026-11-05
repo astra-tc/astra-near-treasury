@@ -1,0 +1,5 @@
+packages:
+  - "x402"
+  - "agents"
+  - "intents"
+  - "dashboard"

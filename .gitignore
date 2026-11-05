@@ -1,0 +1,13 @@
+/target
+**/target
+node_modules
+.pnpm-store
+dist
+build
+.env
+.env.*
+!.env.example
+*.swp
+.DS_Store
+.near-credentials
+*.wasm

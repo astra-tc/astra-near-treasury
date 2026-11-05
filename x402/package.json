@@ -1,0 +1,12 @@
+{
+  "name": "@astra-near/x402",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "node -e \"console.log('x402 stub ok')\"",
+    "build": "echo 'stub — implement in a later commit'"
+  },
+  "license": "MIT"
+}

@@ -1,0 +1,16 @@
+[package]
+name = "spend_guard"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Hard-capped treasury spend policy for Astra (NEAR Hackathon)"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = { version = "=5.23.0", features = ["legacy"] }
+
+[dev-dependencies]
+near-sdk = { version = "=5.23.0", features = ["unit-testing", "legacy"] }
