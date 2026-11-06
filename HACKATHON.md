@@ -17,8 +17,8 @@ Build window: **1–14 Nov 2026**. Submit by 14 Nov 23:59 UTC.
 - [ ] near-workspaces sandbox integration tests
 - [x] x402 paywall (402 → pay → verify → serve) — offline mock RPC
 - [x] agents/ceo router + ledger → spend_guard — mock decisions (within / over cap)
-- [ ] intents/ dry-quote client (`dry:true`)
-- [ ] `pnpm demo` one-command sandbox loop
+- [x] intents/ dry-quote client (`dry:true`) + recorded fixture + offline tests
+- [x] `pnpm demo` offline loop (x402 + CEO mock + intents fixture; no chain signing)
 - [ ] dashboard reading event log + README screenshot
 - [ ] Optional testnet deploy (only if Board allows testnet signing)
 - [ ] 2-min demo video + X post ("built at NEAR HACKATHON")

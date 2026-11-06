@@ -1,0 +1,62 @@
+{
+  "recordedAt": "2026-11-06T19:08:39.846Z",
+  "endpoint": "https://1click.chaindefuser.com/v0/quote",
+  "httpStatus": 201,
+  "note": "Live dry:true quote captured 2026-11-06 (UTC). Read-only; no depositAddress.",
+  "request": {
+    "dry": true,
+    "swapType": "EXACT_INPUT",
+    "slippageTolerance": 100,
+    "originAsset": "nep141:wrap.near",
+    "depositType": "INTENTS",
+    "destinationAsset": "nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+    "amount": "1000000000000000000000000",
+    "recipient": "treasury-demo.near",
+    "recipientType": "INTENTS",
+    "refundTo": "treasury-demo.near",
+    "refundType": "INTENTS",
+    "deadline": "2026-11-06T21:08:39.000Z"
+  },
+  "response": {
+    "quote": {
+      "amountIn": "1000000000000000000000000",
+      "amountInFormatted": "1.0",
+      "amountInUsd": "3.750000000000",
+      "minAmountIn": "1000000000000000000000000",
+      "amountOut": "3724544",
+      "amountOutFormatted": "3.724544",
+      "amountOutUsd": "3.722901476096",
+      "minAmountOut": "3687298",
+      "timeEstimate": 12,
+      "refundFee": "0",
+      "withdrawFee": "0"
+    },
+    "quoteRequest": {
+      "dry": true,
+      "depositMode": "SIMPLE",
+      "swapType": "EXACT_INPUT",
+      "slippageTolerance": 100,
+      "originAsset": "nep141:wrap.near",
+      "depositType": "INTENTS",
+      "destinationAsset": "nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
+      "amount": "1000000000000000000000000",
+      "refundTo": "treasury-demo.near",
+      "refundType": "INTENTS",
+      "recipient": "treasury-demo.near",
+      "recipientType": "INTENTS",
+      "deadline": "2026-11-06T21:08:39.000Z",
+      "confidentiality": "public",
+      "quoteWaitingTimeMs": 0,
+      "insured": false,
+      "appFees": [
+        {
+          "recipient": "5880ad2b362620fadf759cbceb1cd5737ce8c6ed7fb8e9942881e6731f9247dd",
+          "fee": 20
+        }
+      ]
+    },
+    "signature": "ed25519:UzNFNForxQ27x85WY21kcKRBwdGDkVQf3rJP1Ti4iqt89vHkH6Db3LUPifEF1RTYjiifabiErk8rTrXDF9TBhfc",
+    "timestamp": "2026-11-06T19:08:39.846Z",
+    "correlationId": "0b583ba4-e34a-468d-86f4-795a7a740ffb"
+  }
+}

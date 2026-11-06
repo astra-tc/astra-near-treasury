@@ -28,7 +28,8 @@ Checks on every propose/execute:
 No borrow/loan methods. Agent keys (design): FunctionCall access key limited to `{propose_spend, execute_spend}` with an allowance cap.
 
 ## intents/
-Read-only `POST https://1click.chaindefuser.com/v0/quote` with `dry:true`. No deposits.
+Read-only `POST https://1click.chaindefuser.com/v0/quote` with `dry:true` (forced by client). No deposits.
+Offline tests use `intents/test/fixtures/dry_quote_wnear_usdc.json` (live capture, 2026-11-06). Optional live smoke: `ASTRA_INTENTS_LIVE=1 pnpm quote:live`.
 
 ## Out of scope (this hackathon)
 - Mainnet deploy / mainnet signing
