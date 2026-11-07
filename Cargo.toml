@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
   "contracts/spend_guard",
+  "sandbox",
 ]
 
 [profile.release]

@@ -14,7 +14,7 @@ use near_sdk::collections::{LookupSet, UnorderedSet};
 use near_sdk::json_types::U128;
 use near_sdk::serde::Serialize;
 use near_sdk::{
-    env, near_bindgen, require, AccountId, BorshStorageKey, PanicOnDefault,
+    env, near, require, AccountId, BorshStorageKey, PanicOnDefault,
 };
 
 /// One yoctoNEAR = 1 base unit; we track balances as u128 yocto.
@@ -35,6 +35,14 @@ pub struct Policy {
     pub reserve: Yocto,
     /// Maximum yocto that may be spent in a single UTC day.
     pub daily_cap: Yocto,
+}
+
+/// JSON view of [`Policy`] with string-encoded amounts.
+#[derive(Serialize, Clone, Debug, PartialEq, Eq)]
+#[serde(crate = "near_sdk::serde")]
+pub struct PolicyView {
+    pub reserve: U128,
+    pub daily_cap: U128,
 }
 
 #[derive(BorshDeserialize, BorshSerialize, Clone, Debug, PartialEq, Eq)]
@@ -70,9 +78,8 @@ struct DecisionData<'a> {
 const EVENT_STANDARD: &str = "astra_spend_guard";
 const EVENT_VERSION: &str = "1.0.0";
 
-#[near_bindgen]
-#[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
-#[borsh(crate = "near_sdk::borsh")]
+#[near(contract_state)]
+#[derive(PanicOnDefault)]
 pub struct SpendGuard {
     owner: AccountId,
     policy: Policy,
@@ -88,7 +95,7 @@ pub struct SpendGuard {
     pending: Option<PendingSpend>,
 }
 
-#[near_bindgen]
+#[near]
 impl SpendGuard {
     #[init]
     pub fn new(owner: AccountId, reserve: U128, daily_cap: U128, initial_balance: U128) -> Self {
@@ -260,8 +267,12 @@ impl SpendGuard {
 
     // ── views ──────────────────────────────────────────────────────────
 
-    pub fn get_policy(&self) -> Policy {
-        self.policy.clone()
+    /// Policy as JSON strings (U128) so yocto amounts above 2^53 survive JS clients.
+    pub fn get_policy(&self) -> PolicyView {
+        PolicyView {
+            reserve: U128(self.policy.reserve),
+            daily_cap: U128(self.policy.daily_cap),
+        }
     }
 
     pub fn get_balance(&self) -> U128 {
@@ -492,8 +503,8 @@ mod tests {
         let mut c = fresh();
         testing_env!(ctx(owner(), 1_700_000_000_000));
         c.set_policy(U128(50), U128(300), vec![stranger()]);
-        assert_eq!(c.get_policy().reserve, 50);
-        assert_eq!(c.get_policy().daily_cap, 300);
+        assert_eq!(c.get_policy().reserve.0, 50);
+        assert_eq!(c.get_policy().daily_cap.0, 300);
         assert!(c.is_allowed(stranger()));
         assert!(!c.is_allowed(vendor()));
     }

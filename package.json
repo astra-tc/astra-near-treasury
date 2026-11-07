@@ -2,16 +2,19 @@
   "name": "astra-near-treasury",
   "private": true,
   "version": "0.1.0",
-  "description": "Astra Treasury \u2014 agent-run company with a hard-capped NEAR spend-guard",
+  "description": "Astra Treasury — agent-run company with a hard-capped NEAR spend-guard",
   "scripts": {
     "test:x402": "pnpm --filter @astra-near/x402 test",
     "test:agents": "pnpm --filter @astra-near/agents test",
     "test:intents": "pnpm --filter @astra-near/intents test",
     "test:node": "pnpm test:x402 && pnpm test:agents && pnpm test:intents",
-    "test:rust": "cargo test --manifest-path contracts/spend_guard/Cargo.toml",
+    "test:rust": "cargo test -p spend_guard",
     "test": "pnpm test:node",
     "demo": "node --experimental-strip-types ./scripts/demo.ts",
-    "quote:live": "pnpm --filter @astra-near/intents quote:live"
+    "quote:live": "pnpm --filter @astra-near/intents quote:live",
+    "build:wasm": "bash scripts/build-wasm.sh",
+    "test:sandbox": "pnpm build:wasm && cargo test -p astra_sandbox -- --test-threads=1",
+    "demo:sandbox": "pnpm build:wasm && cargo run -q -p astra_sandbox --bin sandbox_demo"
   },
   "engines": {
     "node": ">=22"
