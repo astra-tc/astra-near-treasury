@@ -14,7 +14,8 @@ use near_sdk::collections::{LookupSet, UnorderedSet};
 use near_sdk::json_types::U128;
 use near_sdk::serde::Serialize;
 use near_sdk::{
-    env, near, require, AccountId, BorshStorageKey, PanicOnDefault,
+    env, near, require, AccountId, BorshStorageKey, Gas, NearToken, PanicOnDefault, Promise,
+    PromiseResult,
 };
 
 /// One yoctoNEAR = 1 base unit; we track balances as u128 yocto.
@@ -185,8 +186,13 @@ impl SpendGuard {
     }
 
     /// Agent-callable: execute the pending spend after re-checking policy.
-    /// Deducts from the tracked balance (no external transfer in unit/sandbox mode).
-    pub fn execute_spend(&mut self) {
+    ///
+    /// Deducts the spend from the tracked budget, marks the nonce used, then
+    /// sends a real NEAR transfer of `amount` yocto to the receiver. If the
+    /// transfer fails (e.g. the contract account lacks liquid NEAR), the
+    /// `on_transfer_complete` callback restores the budget and daily bucket.
+    /// The nonce stays burned either way, so a failed spend cannot be replayed.
+    pub fn execute_spend(&mut self) -> Promise {
         let pending = self
             .pending
             .take()
@@ -231,6 +237,40 @@ impl SpendGuard {
             pending.nonce,
             pending.proposer.as_str(),
         );
+
+        Promise::new(pending.receiver.clone())
+            .transfer(NearToken::from_yoctonear(pending.amount))
+            .then(
+                Self::ext(env::current_account_id())
+                    .with_static_gas(Gas::from_tgas(10))
+                    .on_transfer_complete(
+                        pending.receiver,
+                        U128(pending.amount),
+                        pending.nonce,
+                        pending.proposer,
+                    ),
+            )
+    }
+
+    /// Callback after the transfer in `execute_spend`. Contract-only.
+    #[private]
+    pub fn on_transfer_complete(
+        &mut self,
+        receiver: AccountId,
+        amount: U128,
+        nonce: u64,
+        proposer: AccountId,
+    ) -> bool {
+        let ok = matches!(env::promise_result(0), PromiseResult::Successful(_));
+        if ok {
+            self.emit_decision(true, "transferred", amount.0, receiver.as_str(), nonce, proposer.as_str());
+        } else {
+            // Undo the budget deduction; keep the nonce burned.
+            self.balance = self.balance.saturating_add(amount.0);
+            self.spent_today = self.spent_today.saturating_sub(amount.0);
+            self.emit_decision(false, "transfer_failed_refunded", amount.0, receiver.as_str(), nonce, proposer.as_str());
+        }
+        ok
     }
 
     /// Clear a pending proposal without executing (proposer or owner).
@@ -421,12 +461,57 @@ mod tests {
         c
     }
 
+    /// Context for the contract calling its own callback.
+    fn self_ctx(ts_ms: u64) -> VMContext {
+        VMContextBuilder::new()
+            .current_account_id(accounts(4))
+            .predecessor_account_id(accounts(4))
+            .block_timestamp(ts_ms * 1_000_000)
+            .build()
+    }
+
+    fn callback_env(result: PromiseResult) {
+        testing_env!(
+            self_ctx(1_700_000_000_000),
+            near_sdk::test_vm_config(),
+            near_sdk::RuntimeFeesConfig::test(),
+            Default::default(),
+            vec![result]
+        );
+    }
+
+    #[test]
+    fn failed_transfer_refunds_budget_but_keeps_nonce_burned() {
+        let mut c = fresh();
+        testing_env!(ctx(agent(), 1_700_000_000_000));
+        c.propose_spend(vendor(), U128(200), 1);
+        let _ = c.execute_spend();
+        assert_eq!(c.get_balance().0, 800);
+        callback_env(PromiseResult::Failed);
+        assert!(!c.on_transfer_complete(vendor(), U128(200), 1, agent()));
+        assert_eq!(c.get_balance().0, 1_000);
+        assert_eq!(c.get_spent_today().0, 0);
+        assert!(c.nonce_used(1), "nonce must stay burned after a failed transfer");
+    }
+
+    #[test]
+    fn successful_transfer_keeps_deduction() {
+        let mut c = fresh();
+        testing_env!(ctx(agent(), 1_700_000_000_000));
+        c.propose_spend(vendor(), U128(200), 1);
+        let _ = c.execute_spend();
+        callback_env(PromiseResult::Successful(vec![]));
+        assert!(c.on_transfer_complete(vendor(), U128(200), 1, agent()));
+        assert_eq!(c.get_balance().0, 800);
+        assert_eq!(c.get_spent_today().0, 200);
+    }
+
     #[test]
     fn approved_spend_happy_path() {
         let mut c = fresh();
         testing_env!(ctx(agent(), 1_700_000_000_000));
         c.propose_spend(vendor(), U128(200), 1);
-        c.execute_spend();
+        let _ = c.execute_spend();
         assert_eq!(c.get_balance().0, 800);
         assert_eq!(c.get_spent_today().0, 200);
         assert!(c.nonce_used(1));
@@ -439,7 +524,7 @@ mod tests {
         let mut c = fresh();
         testing_env!(ctx(agent(), 1_700_000_000_000));
         c.propose_spend(vendor(), U128(400), 1);
-        c.execute_spend();
+        let _ = c.execute_spend();
         // 400 spent; another 200 would hit 600 > 500
         c.propose_spend(vendor(), U128(200), 2);
     }
@@ -478,7 +563,7 @@ mod tests {
         let mut c = fresh();
         testing_env!(ctx(agent(), 1_700_000_000_000));
         c.propose_spend(vendor(), U128(50), 7);
-        c.execute_spend();
+        let _ = c.execute_spend();
         c.propose_spend(vendor(), U128(50), 7);
     }
 
@@ -539,14 +624,14 @@ mod tests {
         let mut c = fresh();
         testing_env!(ctx(agent(), 1_700_000_000_000));
         c.propose_spend(vendor(), U128(400), 1);
-        c.execute_spend();
+        let _ = c.execute_spend();
         assert_eq!(c.get_spent_today().0, 400);
 
         // +1 day in ms
         let next_day_ms = 1_700_000_000_000 + 86_400_000;
         testing_env!(ctx(agent(), next_day_ms));
         c.propose_spend(vendor(), U128(400), 2);
-        c.execute_spend();
+        let _ = c.execute_spend();
         assert_eq!(c.get_spent_today().0, 400);
         assert_eq!(c.get_balance().0, 200);
     }

@@ -24,6 +24,12 @@ async fn scenario_enforces_board_rules_on_chain() -> anyhow::Result<()> {
     assert!(e.ok, "{e:?}");
     assert_eq!(e.events[0]["data"]["reason"], "executed");
     assert_eq!(e.events[0]["standard"], "astra_spend_guard");
+    // The real NEAR transfer landed and the callback confirmed it.
+    assert!(
+        e.events.iter().any(|ev| ev["data"]["reason"] == "transferred"),
+        "{:?}",
+        e.events
+    );
 
     // Over daily cap is rejected.
     let over = by("ops-tools-over-cap", "propose_spend");
@@ -103,5 +109,27 @@ async fn only_owner_can_credit_and_agent_cannot_execute_without_proposal() -> an
         Ok(o) => assert!(o.is_failure(), "FC key must not reach credit"),
     }
     assert_eq!(balance(&f.contract).await?, INITIAL_BALANCE);
+    Ok(())
+}
+
+#[tokio::test]
+async fn execute_moves_real_near_and_callback_is_private() -> anyhow::Result<()> {
+    let f = setup().await?;
+    let before = f.vendor.view_account().await?.balance;
+    propose(&f.agent_fc, &f.contract, f.vendor.id(), 50, 1).await?.into_result()?;
+    let o = execute(&f.agent_fc, &f.contract).await?;
+    assert!(o.is_success(), "{}", failure_text(&o));
+    let after = f.vendor.view_account().await?.balance;
+    assert_eq!(after.as_yoctonear() - before.as_yoctonear(), 50, "vendor got exactly 50 yocto");
+
+    // Nobody but the contract itself may call the callback (would fake a refund).
+    let o = f
+        .stranger
+        .call(f.contract.id(), "on_transfer_complete")
+        .args_json(json!({"receiver": f.vendor.id(), "amount": "50", "nonce": 1, "proposer": f.stranger.id()}))
+        .transact()
+        .await?;
+    assert!(failure_text(&o).contains("is private"), "{}", failure_text(&o));
+    assert_eq!(balance(&f.contract).await?, INITIAL_BALANCE - 50);
     Ok(())
 }

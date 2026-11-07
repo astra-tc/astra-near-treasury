@@ -10,7 +10,7 @@
 use anyhow::{anyhow, Context, Result};
 use near_workspaces::network::Sandbox;
 use near_workspaces::result::ExecutionFinalResult;
-use near_workspaces::types::{KeyType, NearToken, SecretKey};
+use near_workspaces::types::{Gas, KeyType, NearToken, SecretKey};
 use near_workspaces::{AccessKey, Account, Contract, Worker};
 use serde_json::{json, Value};
 use std::path::PathBuf;
@@ -155,6 +155,8 @@ pub async fn execute(signer: &Account, contract: &Contract) -> Result<ExecutionF
     Ok(signer
         .call(contract.id(), "execute_spend")
         .args_json(json!({}))
+        // transfer + callback (10 Tgas reserved for the callback)
+        .gas(Gas::from_tgas(50))
         .transact()
         .await?)
 }

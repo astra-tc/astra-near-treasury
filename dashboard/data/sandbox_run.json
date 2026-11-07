@@ -12,9 +12,9 @@
             "amount": "50",
             "approved": true,
             "nonce": 1,
-            "proposer": "dev-20261107191307-66750742900947.test.near",
+            "proposer": "dev-20261107192113-50045890873631.test.near",
             "reason": "proposed",
-            "receiver": "dev-20261107191308-76298377115483.test.near"
+            "receiver": "dev-20261107192114-15005055197499.test.near"
           },
           "event": "spend_decision",
           "standard": "astra_spend_guard",
@@ -34,9 +34,22 @@
             "amount": "50",
             "approved": true,
             "nonce": 1,
-            "proposer": "dev-20261107191307-66750742900947.test.near",
+            "proposer": "dev-20261107192113-50045890873631.test.near",
             "reason": "executed",
-            "receiver": "dev-20261107191308-76298377115483.test.near"
+            "receiver": "dev-20261107192114-15005055197499.test.near"
+          },
+          "event": "spend_decision",
+          "standard": "astra_spend_guard",
+          "version": "1.0.0"
+        },
+        {
+          "data": {
+            "amount": "50",
+            "approved": true,
+            "nonce": 1,
+            "proposer": "dev-20261107192113-50045890873631.test.near",
+            "reason": "transferred",
+            "receiver": "dev-20261107192114-15005055197499.test.near"
           },
           "event": "spend_decision",
           "standard": "astra_spend_guard",
@@ -56,9 +69,9 @@
             "amount": "60",
             "approved": false,
             "nonce": 2,
-            "proposer": "dev-20261107191307-66750742900947.test.near",
+            "proposer": "dev-20261107192113-50045890873631.test.near",
             "reason": "would exceed daily_cap",
-            "receiver": "dev-20261107191308-76298377115483.test.near"
+            "receiver": "dev-20261107192114-15005055197499.test.near"
           },
           "event": "spend_decision",
           "standard": "astra_spend_guard",
@@ -78,9 +91,9 @@
             "amount": "10",
             "approved": false,
             "nonce": 3,
-            "proposer": "dev-20261107191307-66750742900947.test.near",
+            "proposer": "dev-20261107192113-50045890873631.test.near",
             "reason": "receiver not on allow-list",
-            "receiver": "dev-20261107191308-98541220798269.test.near"
+            "receiver": "dev-20261107192114-42824298942091.test.near"
           },
           "event": "spend_decision",
           "standard": "astra_spend_guard",
@@ -124,16 +137,16 @@
     }
   ],
   "views": {
-    "agent": "dev-20261107191307-66750742900947.test.near",
+    "agent": "dev-20261107192113-50045890873631.test.near",
     "agent_key_methods": [
       "propose_spend",
       "execute_spend",
       "clear_pending"
     ],
     "balance": "950",
-    "contract": "dev-20261107191307-41138306873348.test.near",
+    "contract": "dev-20261107192113-50882558930813.test.near",
     "daily_cap": "100",
-    "owner": "dev-20261107191307-64240348222293.test.near",
+    "owner": "dev-20261107192113-72097175429372.test.near",
     "policy": {
       "daily_cap": "100",
       "reserve": "100"
