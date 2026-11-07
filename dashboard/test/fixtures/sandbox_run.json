@@ -1,0 +1,144 @@
+{
+  "network": "sandbox",
+  "source": "near-workspaces local sandbox",
+  "steps": [
+    {
+      "action": "propose_spend 50 → vendor",
+      "actor": "agent (FC key)",
+      "detail": "ok",
+      "events": [
+        {
+          "data": {
+            "amount": "50",
+            "approved": true,
+            "nonce": 1,
+            "proposer": "dev-20261107191307-66750742900947.test.near",
+            "reason": "proposed",
+            "receiver": "dev-20261107191308-76298377115483.test.near"
+          },
+          "event": "spend_decision",
+          "standard": "astra_spend_guard",
+          "version": "1.0.0"
+        }
+      ],
+      "label": "ops-tools-within-cap",
+      "ok": true
+    },
+    {
+      "action": "execute_spend",
+      "actor": "agent (FC key)",
+      "detail": "ok",
+      "events": [
+        {
+          "data": {
+            "amount": "50",
+            "approved": true,
+            "nonce": 1,
+            "proposer": "dev-20261107191307-66750742900947.test.near",
+            "reason": "executed",
+            "receiver": "dev-20261107191308-76298377115483.test.near"
+          },
+          "event": "spend_decision",
+          "standard": "astra_spend_guard",
+          "version": "1.0.0"
+        }
+      ],
+      "label": "ops-tools-within-cap",
+      "ok": true
+    },
+    {
+      "action": "propose_spend 60 → vendor",
+      "actor": "agent (FC key)",
+      "detail": "spend rejected: would exceed daily_cap",
+      "events": [
+        {
+          "data": {
+            "amount": "60",
+            "approved": false,
+            "nonce": 2,
+            "proposer": "dev-20261107191307-66750742900947.test.near",
+            "reason": "would exceed daily_cap",
+            "receiver": "dev-20261107191308-76298377115483.test.near"
+          },
+          "event": "spend_decision",
+          "standard": "astra_spend_guard",
+          "version": "1.0.0"
+        }
+      ],
+      "label": "ops-tools-over-cap",
+      "ok": false
+    },
+    {
+      "action": "propose_spend 10 → stranger",
+      "actor": "agent (FC key)",
+      "detail": "spend rejected: receiver not on allow-list",
+      "events": [
+        {
+          "data": {
+            "amount": "10",
+            "approved": false,
+            "nonce": 3,
+            "proposer": "dev-20261107191307-66750742900947.test.near",
+            "reason": "receiver not on allow-list",
+            "receiver": "dev-20261107191308-98541220798269.test.near"
+          },
+          "event": "spend_decision",
+          "standard": "astra_spend_guard",
+          "version": "1.0.0"
+        }
+      ],
+      "label": "unknown-receiver",
+      "ok": false
+    },
+    {
+      "action": "propose_spend nonce=1 again",
+      "actor": "agent (FC key)",
+      "detail": "nonce already used (replay)",
+      "events": [],
+      "label": "replay-nonce",
+      "ok": false
+    },
+    {
+      "action": "set_policy (not in key scope)",
+      "actor": "agent (FC key)",
+      "detail": "refused by node: MethodNameMismatch { method_name: \"set_policy\" }",
+      "events": [],
+      "label": "agent-rewrites-policy",
+      "ok": false
+    },
+    {
+      "action": "transfer 0.001 NEAR → stranger",
+      "actor": "agent (FC key)",
+      "detail": "refused by node: RequiresFullAccess",
+      "events": [],
+      "label": "agent-raw-transfer",
+      "ok": false
+    },
+    {
+      "action": "set_policy",
+      "actor": "stranger",
+      "detail": "owner only",
+      "events": [],
+      "label": "stranger-rewrites-policy",
+      "ok": false
+    }
+  ],
+  "views": {
+    "agent": "dev-20261107191307-66750742900947.test.near",
+    "agent_key_methods": [
+      "propose_spend",
+      "execute_spend",
+      "clear_pending"
+    ],
+    "balance": "950",
+    "contract": "dev-20261107191307-41138306873348.test.near",
+    "daily_cap": "100",
+    "owner": "dev-20261107191307-64240348222293.test.near",
+    "policy": {
+      "daily_cap": "100",
+      "reserve": "100"
+    },
+    "reserve": "100",
+    "spent_today": "50"
+  }
+}

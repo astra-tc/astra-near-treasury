@@ -1,0 +1,42 @@
+{
+  "generatedAt": "2026-11-07T19:14:48.216Z",
+  "x402": [
+    {
+      "step": "GET snapshot without payment",
+      "status": 402,
+      "detail": "402 challenge amount=1000000 receiver=treasury.sandbox"
+    },
+    {
+      "step": "retry with settled payment receipt",
+      "status": 200,
+      "detail": "served treasury-snapshot"
+    },
+    {
+      "step": "replay the same receipt",
+      "status": 409,
+      "detail": "refused (nonce already used)"
+    }
+  ],
+  "ceo": [
+    {
+      "label": "ops-tools-within-cap",
+      "approved": true,
+      "reason": "proposed",
+      "amount": "50"
+    },
+    {
+      "label": "ops-tools-over-cap",
+      "approved": false,
+      "reason": "exceeds_daily_cap",
+      "amount": "200"
+    }
+  ],
+  "ceoFinal": {
+    "balance": "950",
+    "spentToday": "50"
+  },
+  "intents": {
+    "mode": "fixture",
+    "summary": "dry=true | nep141:wrap.near → nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1 | in=1.0 ($3.750000000000) | out≈3.724544 ($3.722901476096) | minOut=3687298 | eta=12s | corr=0b583ba4-e34a-468d-86f4-795a7a740ffb"
+  }
+}

@@ -5,8 +5,14 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "test": "node -e \"console.log('dashboard stub ok')\"",
-    "build": "echo 'stub — implement in a later commit'"
+    "test": "node --experimental-strip-types --test test/**/*.test.ts",
+    "build": "node --experimental-strip-types scripts/build.ts"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "engines": {
+    "node": ">=22"
+  }
 }

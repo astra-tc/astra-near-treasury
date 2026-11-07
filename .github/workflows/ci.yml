@@ -20,7 +20,7 @@ jobs:
         run: cargo test --manifest-path contracts/spend_guard/Cargo.toml -- --nocapture
 
   node:
-    name: x402 + agents + intents unit tests
+    name: x402 + agents + intents + dashboard tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,6 +38,10 @@ jobs:
         run: pnpm --filter @astra-near/agents test
       - name: intents tests
         run: pnpm --filter @astra-near/intents test
+      - name: dashboard tests
+        run: pnpm --filter @astra-near/dashboard test
+      - name: offline demo + dashboard render
+        run: pnpm demo && pnpm dashboard
 
   sandbox:
     name: near-workspaces sandbox integration tests
