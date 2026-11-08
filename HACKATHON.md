@@ -21,7 +21,7 @@ Build window: **1–14 Nov 2026**. Submit by 14 Nov 23:59 UTC.
 - [x] `pnpm demo` offline loop (x402 + CEO mock + intents fixture; no chain signing)
 - [x] `pnpm demo:sandbox` on-chain loop on a local near-workspaces node
 - [x] CEO agent (`agents/`) calling the sandbox contract instead of the TS mirror
-- [ ] Fresh-clone timing check (<3 min) on CI
+- [x] Fresh-clone timing check (<3 min) on CI (offline `pnpm demo` only; node job fails if over 180s)
 - [x] dashboard reading event log + README screenshot (`pnpm dashboard`, docs/img/dashboard.png)
 - [ ] Optional testnet deploy (only if Board allows testnet signing)
 - [ ] 2-min demo video + X post ("built at NEAR HACKATHON")

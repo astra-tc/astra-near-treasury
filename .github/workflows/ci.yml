@@ -40,8 +40,18 @@ jobs:
         run: pnpm --filter @astra-near/intents test
       - name: dashboard tests
         run: pnpm --filter @astra-near/dashboard test
-      - name: offline demo + dashboard render
-        run: pnpm demo && pnpm dashboard
+      - name: offline demo (must finish under 3 minutes) + dashboard render
+        run: |
+          start=$(date +%s)
+          pnpm demo
+          end=$(date +%s)
+          elapsed=$((end - start))
+          echo "offline pnpm demo took ${elapsed}s (limit 180s)"
+          if [ "$elapsed" -gt 180 ]; then
+            echo "offline pnpm demo exceeded 3 minutes (${elapsed}s)"
+            exit 1
+          fi
+          pnpm dashboard
 
   sandbox:
     name: near-workspaces sandbox integration tests
