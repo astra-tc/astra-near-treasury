@@ -1,0 +1,26 @@
+{
+  "source": "agents/src/ceo.ts demoProposals() + demoInitialState()",
+  "policy": {
+    "reserve": "100",
+    "dailyCap": "100",
+    "balance": "1000",
+    "spentToday": "0",
+    "allowList": [
+      "vendor.sandbox"
+    ]
+  },
+  "proposals": [
+    {
+      "label": "ops-tools-within-cap",
+      "receiver": "vendor.sandbox",
+      "amount": "50",
+      "nonce": 1
+    },
+    {
+      "label": "ops-tools-over-cap",
+      "receiver": "vendor.sandbox",
+      "amount": "200",
+      "nonce": 2
+    }
+  ]
+}

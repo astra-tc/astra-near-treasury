@@ -14,6 +14,20 @@ async fn main() -> Result<()> {
     println!("spend_guard deployed at {} (owner {})", f.contract.id(), f.owner.id());
     println!("agent {} signs with a function-call key limited to {:?}\n", f.agent_fc.id(), astra_sandbox::AGENT_METHODS);
 
+    let batch = astra_sandbox::load_ceo_demo_batch()?;
+    println!("Spend proposals come from the CEO agent (agents/demo_proposals.json):");
+    for p in &batch.proposals {
+        println!(
+            "  {:<24} amount={} nonce={} receiver={} (mapped to {})",
+            p.label,
+            p.amount,
+            p.nonce,
+            p.receiver,
+            f.vendor.id()
+        );
+    }
+    println!();
+
     let (steps, views) = run_scenario(&f).await?;
     for s in &steps {
         println!(
@@ -41,6 +55,7 @@ async fn main() -> Result<()> {
     let doc = json!({
         "source": "near-workspaces local sandbox",
         "network": "sandbox",
+        "ceo_batch_source": "agents/demo_proposals.json",
         "views": views,
         "steps": steps.iter().map(|s| s.to_json()).collect::<Vec<_>>(),
     });

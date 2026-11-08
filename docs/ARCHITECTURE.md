@@ -8,10 +8,10 @@ external agent ──HTTP──> x402/ paywall (TS)
          ▼
 treasury = spend_guard contract account (local near-workspaces sandbox)
          ▲
-agents/ CEO ──propose_spend──┐       agent signs with a function-call key:
-                             │         receiver = spend_guard, methods = propose/execute/clear,
-                             │         gas allowance capped
-                             ▼
+agents/ CEO ──demoProposals()──JSON──┐   agent signs with a function-call key:
+   offline: spend_guard_mock.ts      │     receiver = spend_guard, methods = propose/execute/clear,
+                                     │     gas allowance capped
+                                     ▼
 contracts/spend_guard ── checks ── execute_spend ──> Promise::transfer(amount) ──> vendor
          │                                        └─> on_transfer_complete (#[private]):
          │                                              ok → "transferred"; fail → refund budget
@@ -33,8 +33,13 @@ Execute deducts budget, burns the nonce, emits `executed`, sends a NEAR transfer
 
 Views: `get_policy` (U128 strings), `get_balance`, `get_spent_today`, `get_owner`, `is_allowed`, `get_pending`, `nonce_used`.
 
+## agents/
+`demoProposals()` + `demoInitialState()` are the source of truth for the demo spend batch (reserve 100, daily cap 100, balance 1000; labels `ops-tools-within-cap` / `ops-tools-over-cap`). Offline, `proposeSpends()` runs those proposals against `spend_guard_mock.ts` (`pnpm demo`, `pnpm test:agents`). The same batch is serialized to `agents/demo_proposals.json` (`pnpm export:ceo-demo`). `ceo_sandbox.ts` maps `dashboard/data/sandbox_run.json` (or a fixture) back to `ProposalResult[]`; it does not boot a sandbox unless `ASTRA_SANDBOX=1` or `{ spawn: true }` is set.
+
 ## sandbox/ (near-workspaces 0.24)
-`setup()` boots a local sandbox node, deploys the wasm from `scripts/build-wasm.sh` (`target-cpu=mvp`), creates owner/agent/vendor/stranger dev accounts, sets policy, and adds the agent's FC key. `run_scenario()` is shared by the integration tests and `sandbox_demo`.
+`setup()` boots a local sandbox node, deploys the wasm from `scripts/build-wasm.sh` (`target-cpu=mvp`), creates owner/agent/vendor/stranger dev accounts, sets policy from the CEO demo export (`agents/demo_proposals.json`), and adds the agent's FC key. `run_scenario()` submits that CEO spend batch to the on-chain contract (mapping `vendor.sandbox` to the fixture vendor account), then runs extra security steps that are not CEO spends (unknown receiver, replay nonce, FC key blocked on `set_policy`/transfer, stranger owner check). Shared by the integration tests and `sandbox_demo`. `pnpm demo:sandbox` prints that the spend proposals came from the CEO agent.
+
+Do X → see Y: run `pnpm demo:sandbox` (or `pnpm test:sandbox`). You should see the CEO's first proposal (`ops-tools-within-cap`, 50) approved and executed on-chain, and the second (`ops-tools-over-cap`, 200) rejected for `daily_cap`.
 
 ## intents/
 Read-only `POST https://1click.chaindefuser.com/v0/quote` with `dry:true` (forced by the client). No deposits.

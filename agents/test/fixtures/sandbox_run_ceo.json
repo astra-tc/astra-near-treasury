@@ -1,0 +1,46 @@
+{
+  "source": "near-workspaces local sandbox",
+  "network": "sandbox",
+  "ceo_batch_source": "agents/demo_proposals.json",
+  "steps": [
+    {
+      "label": "ops-tools-within-cap",
+      "actor": "agent (FC key)",
+      "action": "propose_spend 50 → vendor",
+      "ok": true,
+      "detail": "ok",
+      "events": [
+        {
+          "data": { "reason": "proposed", "amount": "50", "approved": true, "nonce": 1 }
+        }
+      ]
+    },
+    {
+      "label": "ops-tools-within-cap",
+      "actor": "agent (FC key)",
+      "action": "execute_spend",
+      "ok": true,
+      "detail": "ok",
+      "events": [
+        {
+          "data": { "reason": "executed", "amount": "50", "approved": true, "nonce": 1 }
+        },
+        {
+          "data": { "reason": "transferred", "amount": "50", "approved": true, "nonce": 1 }
+        }
+      ]
+    },
+    {
+      "label": "ops-tools-over-cap",
+      "actor": "agent (FC key)",
+      "action": "propose_spend 200 → vendor",
+      "ok": false,
+      "detail": "spend rejected: would exceed daily_cap",
+      "events": [
+        {
+          "data": { "reason": "would exceed daily_cap", "amount": "200", "approved": false, "nonce": 2 }
+        }
+      ]
+    }
+  ]
+}

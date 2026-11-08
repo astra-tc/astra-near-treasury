@@ -16,11 +16,23 @@ async fn scenario_enforces_board_rules_on_chain() -> anyhow::Result<()> {
             .clone()
     };
 
-    // Within policy: proposal and execution succeed and emit events.
-    let p = by("ops-tools-within-cap", "propose_spend");
+    // CEO-exported batch: first proposal approved + executed on-chain.
+    let batch = load_ceo_demo_batch()?;
+    assert!(batch.proposals.len() >= 2, "CEO demo batch needs within-cap then over-cap");
+    let first = &batch.proposals[0];
+    let second = &batch.proposals[1];
+
+    let p = by(&first.label, "propose_spend");
     assert!(p.ok, "{p:?}");
+    assert!(
+        p.action.contains(&first.amount.to_string()),
+        "propose action should use CEO-exported amount {}: {}",
+        first.amount,
+        p.action
+    );
     assert_eq!(p.events[0]["data"]["reason"], "proposed");
-    let e = by("ops-tools-within-cap", "execute_spend");
+    assert_eq!(p.events[0]["data"]["amount"], json!(first.amount.to_string()));
+    let e = by(&first.label, "execute_spend");
     assert!(e.ok, "{e:?}");
     assert_eq!(e.events[0]["data"]["reason"], "executed");
     assert_eq!(e.events[0]["standard"], "astra_spend_guard");
@@ -31,10 +43,16 @@ async fn scenario_enforces_board_rules_on_chain() -> anyhow::Result<()> {
         e.events
     );
 
-    // Over daily cap is rejected.
-    let over = by("ops-tools-over-cap", "propose_spend");
+    // CEO-exported second proposal is rejected for daily cap.
+    let over = by(&second.label, "propose_spend");
     assert!(!over.ok);
     assert!(over.detail.contains("daily_cap"), "{}", over.detail);
+    assert!(
+        over.action.contains(&second.amount.to_string()),
+        "over-cap action should use CEO-exported amount {}: {}",
+        second.amount,
+        over.action
+    );
 
     // Receiver not on allow-list.
     let unk = by("unknown-receiver", "propose_spend");
@@ -58,11 +76,77 @@ async fn scenario_enforces_board_rules_on_chain() -> anyhow::Result<()> {
     assert!(!s.ok);
     assert!(s.detail.contains("owner only"), "{}", s.detail);
 
-    // Only the one approved spend moved the simulated ledger.
-    assert_eq!(views["balance"], json!((INITIAL_BALANCE - 50).to_string()));
-    assert_eq!(views["spent_today"], json!("50"));
-    assert_eq!(views["policy"]["daily_cap"], json!(DAILY_CAP.to_string()));
+    // Only the one approved (CEO-exported) spend moved the simulated ledger.
+    assert_eq!(
+        views["balance"],
+        json!((batch.initial_balance - first.amount).to_string())
+    );
+    assert_eq!(views["spent_today"], json!(first.amount.to_string()));
+    assert_eq!(views["policy"]["daily_cap"], json!(batch.daily_cap.to_string()));
+    assert_eq!(views["ceo_batch_source"], json!(batch.source));
     Ok(())
+}
+
+/// Named proof: the CEO export's first spend is approved and executed on-chain;
+/// the second is rejected for the daily cap.
+#[tokio::test]
+async fn ceo_exported_proposals_are_decided_on_chain() -> anyhow::Result<()> {
+    let batch = load_ceo_demo_batch()?;
+    assert!(batch.proposals.len() >= 2);
+    let first = &batch.proposals[0];
+    let second = &batch.proposals[1];
+    assert_eq!(first.label, "ops-tools-within-cap");
+    assert_eq!(second.label, "ops-tools-over-cap");
+    assert!(
+        first.amount + second.amount > batch.daily_cap,
+        "second CEO proposal must exceed remaining daily cap"
+    );
+
+    let f = setup().await?;
+    let (steps, views) = run_scenario(&f).await?;
+    let by = |label: &str, action_prefix: &str| {
+        steps
+            .iter()
+            .find(|s| s.label == label && s.action.starts_with(action_prefix))
+            .unwrap_or_else(|| panic!("missing step {label}/{action_prefix}"))
+            .clone()
+    };
+
+    let propose = by(&first.label, "propose_spend");
+    assert!(propose.ok, "CEO first proposal should be approved: {propose:?}");
+    let exec = by(&first.label, "execute_spend");
+    assert!(exec.ok, "CEO first proposal should execute: {exec:?}");
+    assert!(
+        exec.events.iter().any(|ev| ev["data"]["reason"] == "transferred"),
+        "{:?}",
+        exec.events
+    );
+
+    let over = by(&second.label, "propose_spend");
+    assert!(!over.ok, "CEO second proposal should be rejected: {over:?}");
+    assert!(over.detail.contains("daily_cap"), "{}", over.detail);
+
+    assert_eq!(
+        views["spent_today"],
+        json!(first.amount.to_string())
+    );
+    Ok(())
+}
+
+#[test]
+fn ceo_demo_export_matches_compiled_defaults() {
+    let batch = load_ceo_demo_batch().expect("agents/demo_proposals.json");
+    assert_eq!(batch.reserve, RESERVE);
+    assert_eq!(batch.daily_cap, DAILY_CAP);
+    assert_eq!(batch.initial_balance, INITIAL_BALANCE);
+    assert!(batch.proposals.len() >= 2);
+    assert_eq!(batch.proposals[0].label, "ops-tools-within-cap");
+    assert_eq!(batch.proposals[0].receiver, CEO_VENDOR_ALIAS);
+    assert_eq!(batch.proposals[1].label, "ops-tools-over-cap");
+    assert!(
+        batch.proposals[0].amount + batch.proposals[1].amount > batch.daily_cap,
+        "demo batch should include a spend that exceeds the daily cap"
+    );
 }
 
 #[tokio::test]

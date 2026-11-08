@@ -16,10 +16,10 @@ pnpm dashboard       # renders dashboard/out/index.html from the two runs above
 
 | Do | You should see |
 |----|----------------|
-| `pnpm demo:sandbox` | spend_guard is deployed to a local `near-workspaces` sandbox. The agent signs with a **function-call key** limited to `propose_spend / execute_spend / clear_pending`. Output table: the 50-yocto spend is `OK` (proposed → executed → transferred); 60 more is `BLOCKED would exceed daily_cap`; a non-allow-listed receiver is `BLOCKED`; a reused nonce is `BLOCKED (replay)`; the agent's key calling `set_policy` is refused by the node with `MethodNameMismatch`; a raw NEAR transfer with that key is refused with `RequiresFullAccess`; a stranger calling `set_policy` gets `owner only`. Final `balance=950 spent_today=50`. |
-| `pnpm test:sandbox` | 4 integration tests pass on the local sandbox, including "vendor balance rises by exactly 50 yocto" and "only the contract can call its own callback". |
+| `pnpm demo:sandbox` | spend_guard is deployed to a local `near-workspaces` sandbox. Spend proposals come from the CEO agent (`agents/demo_proposals.json`, the same `demoProposals()` batch as offline `pnpm demo`); `vendor.sandbox` is mapped to the sandbox vendor account. The agent signs with a **function-call key** limited to `propose_spend / execute_spend / clear_pending`. Output table: the CEO's 50-yocto `ops-tools-within-cap` spend is `OK` (proposed → executed → transferred); the CEO's 200-yocto `ops-tools-over-cap` spend is `BLOCKED spend rejected: amount exceeds daily_cap`; a non-allow-listed receiver is `BLOCKED`; a reused nonce is `BLOCKED (replay)`; the agent's key calling `set_policy` is refused by the node with `MethodNameMismatch`; a raw NEAR transfer with that key is refused with `RequiresFullAccess`; a stranger calling `set_policy` gets `owner only`. Final `balance=950 spent_today=50`. |
+| `pnpm test:sandbox` | 5 integration tests pass on the local sandbox, including "CEO-exported first proposal approved and executed, second rejected for daily cap", "vendor balance rises by exactly 50 yocto" and "only the contract can call its own callback". |
 | `pnpm test:rust` | 14 spend_guard unit tests (cap, reserve, allow-list, replay, owner-only, UTC day roll, refund on failed transfer). |
-| `pnpm demo` | Section 1: unpaid request → `402` with amount/receiver/nonce; paid retry → `200` snapshot; same receipt again → `409` (replay). Section 2: CEO proposals, one approved, one rejected `exceeds_daily_cap`. Section 3: a NEAR Intents 1Click quote with `dry=true` (recorded fixture). |
+| `pnpm demo` | Section 1: unpaid request → `402` with amount/receiver/nonce; paid retry → `200` snapshot; same receipt again → `409` (replay). Section 2: CEO proposals against the TS mock (same `demoProposals()` batch), one approved, one rejected `exceeds_daily_cap`. Section 3: a NEAR Intents 1Click quote with `dry=true` (recorded fixture). No chain signing. |
 | `ASTRA_INTENTS_LIVE=1 pnpm quote:live` | A live read-only `dry:true` quote from `1click.chaindefuser.com` (no deposit address is used, nothing is signed). |
 | `pnpm test` | TypeScript tests for x402, agents, intents, dashboard (Node test runner). |
 | `pnpm dashboard`, then open `dashboard/out/index.html` | Org chart (who holds which key), treasury cards (balance, spent/cap, agent headroom), each agent action with its result and NEP-297 events, the x402 loop, and the Intents quote. |
@@ -28,8 +28,9 @@ pnpm dashboard       # renders dashboard/out/index.html from the two runs above
 ```
 external agent ──HTTP──> x402/ paywall ── 402 {amount, receiver, nonce} ──> pays ──> receipt verified ──> 200 data
                                                                                         │ revenue
-agents/ CEO ── propose_spend ──> contracts/spend_guard (NEAR) ── execute_spend ──> NEAR transfer to allow-listed vendor
-   (FC key: propose/execute/clear only)   checks: allow-list · daily cap · balance − reserve · nonce
+agents/ CEO ── demoProposals() ──JSON──> sandbox run_scenario ── propose_spend ──> spend_guard ── execute_spend ──> vendor
+   (offline: spend_guard_mock.ts)         agent FC key: propose/execute/clear only
+                                          checks: allow-list · daily cap · balance − reserve · nonce
                                           owner-only: set_policy · credit      events: EVENT_JSON (NEP-297)
 intents/ ── dry quote for paying a vendor cross-chain (read-only)          dashboard/ ── renders the event log
 ```
@@ -58,7 +59,7 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) · [docs/THREAT_MODEL.md](
 ## Honest scope / limits
 - Everything runs locally: unit tests, a local `near-workspaces` sandbox, and recorded Intents fixtures. **Nothing is deployed to testnet or mainnet**, and no real funds move.
 - `balance` in spend_guard is a **budget the owner credits**; `execute_spend` then sends that amount of real NEAR (sandbox NEAR in the demo) from the contract account. If the contract account cannot cover it, the callback refunds the budget.
-- The x402 paywall verifies receipts against a mock RPC in the demo; the CEO agent in `agents/` uses a TypeScript mirror of the contract's checks (the on-chain path is in `sandbox/`).
+- The x402 paywall verifies receipts against a mock RPC in the demo. `pnpm demo` uses a TypeScript mirror of spend_guard for offline CEO checks (`spend_guard_mock.ts`). `pnpm demo:sandbox` submits the same CEO demo batch (`demoProposals()`, exported to `agents/demo_proposals.json`) to the on-chain contract; `agents/src/ceo_sandbox.ts` maps the sandbox run back to `ProposalResult[]`.
 - Intents is quote-only (`dry:true`); no deposits or swaps.
 
 ## Network policy
@@ -71,7 +72,7 @@ No mainnet signing from this project. Prize / payout address (documented only, n
 | `contracts/spend_guard` | Rust contract + unit tests |
 | `sandbox/` | `near-workspaces` harness: integration tests + `sandbox_demo` runner (writes `dashboard/data/sandbox_run.json`) |
 | `x402/` | Paywall: 402 challenge, nonce store, receipt verify, snapshot |
-| `agents/` | CEO proposals against a TS mirror of the policy |
+| `agents/` | CEO proposals: TS mock for offline tests; `demo_proposals.json` + `ceo_sandbox.ts` bridge for the on-chain sandbox path |
 | `intents/` | 1Click dry-quote client, fixture, offline tests, live smoke |
 | `dashboard/` | Static HTML renderer + tests |
 | `scripts/` | `demo.ts`, `build-wasm.sh` |

@@ -6,6 +6,7 @@
   "scripts": {
     "test:x402": "pnpm --filter @astra-near/x402 test",
     "test:agents": "pnpm --filter @astra-near/agents test",
+    "export:ceo-demo": "pnpm --filter @astra-near/agents export-demo",
     "test:intents": "pnpm --filter @astra-near/intents test",
     "test:node": "pnpm test:x402 && pnpm test:agents && pnpm test:intents && pnpm test:dashboard",
     "test:rust": "cargo test -p spend_guard",

@@ -1,5 +1,10 @@
 /**
- * CEO stub — proposes spends against a mock spend_guard decision surface.
+ * CEO stub — proposes spends.
+ *
+ * Offline (`pnpm demo`, `pnpm test:agents`): decisions come from
+ * spend_guard_mock.ts. On-chain (`pnpm demo:sandbox`): the same
+ * demoProposals() batch is exported to demo_proposals.json and submitted
+ * to contracts/spend_guard. See ceo_sandbox.ts.
  */
 
 import {
